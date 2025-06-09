@@ -39,3 +39,7 @@ out/
 ### Environment Variables ###
 .env
 .env.local
+
+### Application Logs ###
+app.log
+*.log
