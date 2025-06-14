@@ -1,7 +1,7 @@
 package com.example.demo.controller;
 
-import com.example.demo.entity.User;
-import com.example.demo.repository.UserRepository;
+import com.example.demo.model.User;
+import com.example.demo.mapper.UserMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.transaction.annotation.Transactional;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -37,37 +38,41 @@ public class UserControllerIntegrationTest {
         registry.add("spring.datasource.url", postgres::getJdbcUrl);
         registry.add("spring.datasource.username", postgres::getUsername);
         registry.add("spring.datasource.password", postgres::getPassword);
-        registry.add("spring.jpa.hibernate.ddl-auto", () -> "create");
-        registry.add("spring.sql.init.mode", () -> "never");
-        registry.add("spring.jpa.defer-datasource-initialization", () -> "false");
+        registry.add("spring.sql.init.mode", () -> "always");
     }
 
     @Autowired
     private TestRestTemplate restTemplate;
 
     @Autowired
-    private UserRepository userRepository;
+    private UserMapper userMapper;
 
     @LocalServerPort
     private int port;
 
     @BeforeEach
+    @Transactional
     void setUp() {
-        // テストデータのセットアップ - 独立したテストデータを作成
-        userRepository.deleteAll();
+        // テストデータのセットアップ - 各テスト前にテーブルをクリア
+        userMapper.deleteAll();
+        System.out.println("クリア後のユーザー数: " + userMapper.count());
         
-        User user1 = new User("テストユーザー1", "test1@example.com");
-        User user2 = new User("テストユーザー2", "test2@example.com");
-        User user3 = new User("テストユーザー3", "test3@example.com");
+        // テストデータを作成 - 各テストで異なるメールアドレスを使用
+        String timestamp = String.valueOf(System.currentTimeMillis());
+        User user1 = new User("テストユーザー1", "test1_" + timestamp + "@example.com");
+        User user2 = new User("テストユーザー2", "test2_" + timestamp + "@example.com");
+        User user3 = new User("テストユーザー3", "test3_" + timestamp + "@example.com");
         
-        userRepository.save(user1);
-        userRepository.save(user2);
-        userRepository.save(user3);
+        userMapper.insert(user1);
+        userMapper.insert(user2);
+        userMapper.insert(user3);
+        
+        System.out.println("セットアップ後のユーザー数: " + userMapper.count());
     }
 
     @Test
     public void getAllUsers_shouldReturnAllUsersFromDatabase() {
-        // テストデータが3件あることを確認
+        // テストで挿入した3件のユーザーを確認
         int expectedUserCount = 3;
 
         // /api/users エンドポイントをテスト
@@ -123,7 +128,7 @@ public class UserControllerIntegrationTest {
     @Test
     public void getAllUsers_databaseIntegrationTest() {
         // データベースへの統合テスト - Testcontainerで独立したデータベースを使用
-        List<User> dbUsers = userRepository.findAll();
+        List<User> dbUsers = userMapper.selectAll();
         assertEquals(3, dbUsers.size());
         
         // APIレスポンスとデータベースの内容が一致することを確認

@@ -25,13 +25,16 @@ ext {
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.boot:spring-boot-starter-security'
-	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:3.0.3'
 	implementation 'org.postgresql:postgresql'
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation "org.testcontainers:junit-jupiter:${testcontainersVersion}"
 	testImplementation "org.testcontainers:postgresql:${testcontainersVersion}"
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+	
+	// MyBatis Generator
+	implementation 'org.mybatis.generator:mybatis-generator-core:1.4.2'
 }
 
 tasks.named('test') {
@@ -54,4 +57,14 @@ tasks.named('test') {
 			println('\n' + ('-' * repeatLength) + '\n' + startItem + output + endItem + '\n' + ('-' * repeatLength))
 		}
 	}
+}
+
+// MyBatis Generator task
+task mybatisGenerate(type: JavaExec) {
+    description = 'Generate MyBatis model classes and mappers'
+    group = 'mybatis'
+    
+    classpath = configurations.runtimeClasspath
+    mainClass = 'org.mybatis.generator.api.ShellRunner'
+    args = ['-configfile', 'src/main/resources/generatorConfig.xml', '-overwrite']
 }

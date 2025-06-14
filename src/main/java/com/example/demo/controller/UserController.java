@@ -1,7 +1,7 @@
 package com.example.demo.controller;
 
-import com.example.demo.entity.User;
-import com.example.demo.repository.UserRepository;
+import com.example.demo.model.User;
+import com.example.demo.mapper.UserMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -21,7 +21,7 @@ import java.util.List;
 public class UserController {
 
     @Autowired
-    private UserRepository userRepository;
+    private UserMapper userMapper;
 
     @Operation(summary = "ユーザー一覧取得", description = "登録されている全ユーザーの一覧を取得します")
     @ApiResponses(value = {
@@ -31,6 +31,6 @@ public class UserController {
     })
     @GetMapping
     public List<User> getAllUsers() {
-        return userRepository.findAll();
+        return userMapper.selectAll();
     }
 }
